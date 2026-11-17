@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우리 가족 픽셀 마을</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#343d31;background:#f9f4e5;--cream:#fffdf5;--line:#e9dfc8;--green:#355746}
+*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer;color:inherit}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #507e64;outline-offset:3px}
+header,main{max-width:1050px;margin:auto;padding-inline:clamp(16px,4vw,38px)}header{display:flex;justify-content:space-between;align-items:center;padding-block:20px;gap:12px}header strong{letter-spacing:-.05em}header time{font-size:.85rem;color:#617060;text-align:right}
+.hero{position:relative;overflow:hidden;border:2px solid #879e78;box-shadow:0 5px #d5d7b6;background:#e5f0d4;border-radius:20px;display:grid;grid-template-columns:1fr 1fr;align-items:center;min-height:225px}.hero-copy{padding:24px 0 24px 25px;z-index:1}.hero h1{font-size:clamp(1.75rem,4.5vw,3.3rem);line-height:1.13;margin:0;letter-spacing:-.09em;color:#294c3b}.hero p{font-size:.9rem;margin:13px 0 0;color:#52664c}.hero canvas{width:100%;height:auto;image-rendering:pixelated;align-self:end}
+nav,.filters,.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}nav{margin:24px 0 16px;border-bottom:2px solid var(--line);padding-bottom:10px}nav button,.filters button,.plain,.primary,.small{border:1px solid var(--line);border-radius:10px;background:var(--cream);padding:9px 13px;min-height:42px;font-weight:700}nav button[aria-current],.primary{background:var(--green);color:white;border-color:var(--green)}.filters button[aria-pressed=true]{background:#e3eddb;border-color:#8ca682}.filters{margin-bottom:18px}.filters button{font-size:.85rem}
+.family{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:22px}.person{background:var(--tint);border:1px solid var(--line);border-radius:14px;text-align:left;padding:12px;display:grid;gap:6px;min-width:0}.person strong{font-size:.95rem}.person span{font-size:.78rem;color:#4c574a}.person canvas{width:36px;height:36px;image-rendering:pixelated}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:14px}.panel,.day{background:var(--cream);border:1px solid var(--line);border-radius:16px;padding:15px}.panel h2,.toolbar h2{margin:0;font-size:1.14rem;letter-spacing:-.045em}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}.small{padding:5px 9px;min-height:36px;font-size:.79rem}.list{list-style:none;padding:0;margin:0}.row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px dashed var(--line);min-height:54px}.row:last-child{border-bottom:0}.row-copy{flex:1;min-width:0;overflow-wrap:anywhere}.row-copy strong,.row-copy small{display:block}.row-copy small{color:#5c695b;margin-top:3px;font-size:.78rem}.row.done strong{text-decoration:line-through;color:#667163}.tick{width:36px;height:36px;flex:none;accent-color:var(--green);cursor:pointer}.empty{color:#687064;font-size:.88rem;padding:10px 0}.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-top:12px}.day{padding:10px;min-height:135px}.day h3{margin:0 0 6px;font-size:.88rem}.day.today{border:2px solid #87a37c}.event{display:block;border:0;border-left:4px solid #8da780;border-radius:7px;background:var(--tint);text-align:left;width:100%;padding:7px;margin-top:6px;font-size:.76rem;overflow-wrap:anywhere}.event strong{display:block;margin:3px 0}.toolbar .date-range{flex:1;text-align:center;font-weight:800}.progress{font-size:.83rem;color:#4c694b}footer{padding:24px 0;font-size:.8rem;color:#626f5e}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--cream);width:min(420px,calc(100% - 28px));color:inherit;padding:20px}dialog::backdrop{background:#24352866}form{display:grid;gap:12px}form h2{margin:0}form label{display:grid;gap:4px;font-size:.86rem;font-weight:700}input,select{min-width:0;border:1px solid #d5c9af;border-radius:8px;padding:9px;background:white;color:inherit}input[type=checkbox]{min-width:auto}.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}.error{margin:0;color:#a33d3d;font-size:.85rem}
+@media(max-width:730px){.week{grid-template-columns:repeat(2,minmax(0,1fr))}.day{min-height:95px}}
+@media(max-width:540px){.panels{grid-template-columns:1fr}.family{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{min-height:165px}.hero-copy{padding-left:14px}.hero p{font-size:.75rem}.toolbar .date-range{flex-basis:55%;font-size:.86rem}}
+</style>
+</head>
+<body>
+<header><strong>▦ 우리 가족 대시보드</strong><time id="todayLabel"></time></header>
+<main>
+<section class="hero">
+<div class="hero-copy"><h1>우리 가족<br>픽셀 마을</h1><p>오늘 일정과 할 일을 한곳에서</p></div>
+<canvas id="village" width="144" height="84" aria-hidden="true"></canvas>
+</section>
+<nav aria-label="화면 선택" id="nav"></nav>
+<div class="filters" aria-label="가족 선택" id="filters"></div>
+<section id="content" aria-label="대시보드"></section>
+<footer>예시 데이터가 포함되어 있어요 · 변경 내용은 이 브라우저에 저장돼요.</footer>
+</main>
+<dialog id="editor">
+<form id="form">
+<h2 id="editorTitle"></h2>
+<label>이름<input name="title" required maxlength="70" placeholder="예: 영어책 한 권 읽기"></label>
+<div class="pair">
+<label>담당<select name="owner"></select></label>
+<label id="dateLabel">날짜<input name="date" type="date" required></label>
+</div>
+<div class="pair" id="times">
+<label>시작<input name="start" type="time"></label>
+<label>종료<input name="end" type="time"></label>
+</div>
+<label id="repeat">반복<select name="repeat"><option value="no">한 번</option><option value="weekly">매주 같은 요일</option></select></label>
+<p class="error" id="error" role="alert"></p>
+<div class="actions"><button class="small" type="button" id="remove">삭제</button><button class="plain" type="button" id="cancel">취소</button><button class="primary">저장</button></div>
+</form>
+</dialog>
+<script>
+const $ = id => document.getElementById(id);
+const people = [
+ {id:'dad',name:'아빠',color:'#deebf8',body:'#6995bb'},
+ {id:'mom',name:'엄마',color:'#f6e3eb',body:'#ca829e'},
+ {id:'won',name:'도희원',color:'#eee6fa',body:'#9b7cc6'},
+ {id:'jin',name:'도희진',color:'#e5efdb',body:'#80a86c'}
+];
+const everyone = {id:'all',name:'가족 전체',color:'#f4eacb'};
+const person = id => people.find(p=>p.id===id) || everyone;
+const dateFmt = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'});
+const today = dateFmt.format(new Date());
+const date = iso => new Date(iso+'T12:00:00Z');
+const addDays = (iso,n) => {
+ const d=date(iso);
+ d.setUTCDate(d.getUTCDate()+n);
+ return d.toISOString().slice(0,10);
+};
+const day = iso => date(iso).getUTCDay();
+const monday = iso => addDays(iso,-((day(iso)+6)%7));
+const shortDate = iso => `${Number(iso.slice(5,7))}/${Number(iso.slice(8))}`;
+const weekdays = '일월화수목금토';
+$('todayLabel').textContent=`${shortDate(today)} ${weekdays[day(today)]}요일`;
+const sampleEvent=(id,owner,title,date,start,end,repeat='no')=>({id,owner,title,date,start,end,repeat});
+const sampleTask=(id,owner,title,done=false)=>({id,owner,title,date:today,done});
+const seed={
+ events:[
+  sampleEvent('e1','dad','학원 데리러 가기',today,'17:20','17:40'),
+  sampleEvent('e2','mom','가족 저녁 준비',today,'18:00','18:30'),
+  sampleEvent('e3','jin','그림책 읽는 시간',today,'19:30','19:50'),
+  ...[1,3,5].map(n=>sampleEvent('eng'+n,'won','영어 학원',addDays(monday(today),n-1),'15:20','16:40','weekly')),
+  ...[2,3,4].map(n=>sampleEvent('tk'+n,'won','태권도',addDays(monday(today),n-1),'16:30','17:20','weekly'))
+ ],
+ tasks:[
+  sampleTask('t1','won','영어책 한 권 읽기'),
+  sampleTask('t2','won','내일 준비물 챙기기',true),
+  sampleTask('t3','jin','그림책 10분 읽기'),
+  sampleTask('t4','jin','장난감 제자리에 놓기'),
+  sampleTask('t5','dad','학원 가방 챙기기'),
+  sampleTask('t6','mom','내일 일정 확인하기'),
+  sampleTask('t7','all','저녁 식탁 같이 정리하기')
+ ]
+};
+const key='family-pixel-village-v1';
+let data=seed;
+try{const saved=JSON.parse(localStorage.getItem(key));if(Array.isArray(saved?.events)&&Array.isArray(saved?.tasks))data=saved;}catch{}
+let view='home', selected='all', week=monday(today), editKind, editId;
+const tabs=[['home','오늘'],['week','주간 시간표'],['tasks','숙제·할 일']];
+const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const matches=item=>selected==='all'||item.owner===selected||item.owner==='all';
+const happens=(event,iso)=>event.date===iso||(event.repeat==='weekly'&&iso>=event.date&&day(event.date)===day(iso));
+const eventsAt=iso=>data.events.filter(e=>matches(e)&&happens(e,iso)).sort((a,b)=>a.start.localeCompare(b.start));
+const timeText=e=>e.end?`${e.start}–${e.end}`:e.start;
+function save(){
+ try{localStorage.setItem(key,JSON.stringify(data));}
+ catch{document.querySelector('footer').textContent='브라우저 저장 공간을 사용할 수 없어 이 페이지를 닫으면 변경 내용이 사라져요.';}
+ render();
+}
+function drawAvatar(ctx,x,y,body,i){
+ const r=(a,b,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(x+a,y+b,w,h);};
+ const edge='#594b42';
+ r(3,4,10,9,edge);r(4,3,8,10,'#f8d9b8');
+ r(3,4,10,2,i===1?'#765044':edge);r(4,2,8,3,i===2?body:edge);
+ r(5,8,1,1,edge);r(10,8,1,1,edge);r(7,10,2,1,'#b46d64');
+ r(2,12,12,3,body);r(4,15,3,1,edge);r(9,15,3,1,edge);
+ if(i===2){r(11,2,3,2,'#e7a0b9');}
+ if(i===3){r(3,2,10,3,body);r(8,5,6,1,body);}
+}
+function paint(){
+ const ctx=$('village').getContext('2d');
+ const r=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(x,y,w,h);};
+ r(0,0,144,84,'#e5f0d4');r(105,11,9,9,'#f5cc72');r(107,9,5,13,'#f5cc72');
+ r(18,18,20,4,'#f9fae9');r(23,15,10,3,'#f9fae9');r(118,30,21,3,'#f9fae9');
+ r(0,58,144,26,'#bdd59f');r(0,65,144,19,'#a9c78e');r(0,75,144,7,'#e5c491');r(66,64,24,14,'#e5c491');
+ for(const [x,y] of [[12,48],[30,51],[117,47],[135,52]]){
+  r(x+4,y+10,3,10,'#8a684d');r(x,y+2,11,10,'#7a9e68');r(x+2,y,7,13,'#8bb47a');r(x+2,y+2,3,4,'#a1c489');
+ }
+ r(52,41,53,25,'#765848');r(55,41,47,23,'#fff1cd');r(84,18,8,12,'#b7776a');
+ for(let n=0;n<8;n++)r(47+n*4,39-n*3,63-n*8,4,n%2?'#c67f75':'#d89585');
+ r(49,42,59,3,'#9a615a');r(60,49,10,9,'#688b82');r(62,50,6,6,'#c0e3db');r(88,49,10,9,'#688b82');r(90,50,6,6,'#c0e3db');r(74,51,10,15,'#a87958');r(81,58,1,1,'#ffe8a7');
+ people.forEach((p,i)=>drawAvatar(ctx,41+i*19,57,p.body,i));
+ document.querySelectorAll('[data-avatar]').forEach(canvas=>{
+  const i=people.findIndex(p=>p.id===canvas.dataset.avatar);
+  drawAvatar(canvas.getContext('2d'),0,0,people[i].body,i);
+ });
+}
+function row(item,kind){
+ const task=kind==='task';
+ return `<li class="row ${item.done?'done':''}">
+ ${task?`<input class="tick" type="checkbox" data-check="${esc(item.id)}" aria-label="${esc(item.title)} 완료" ${item.done?'checked':''}>`:''}
+ <div class="row-copy"><strong>${esc(item.title)}</strong><small>${esc(person(item.owner).name)} · ${task?shortDate(item.date)+' 마감':esc(timeText(item))}</small></div>
+ <button class="small" data-edit="${esc(item.id)}" data-kind="${kind}" aria-label="${esc(item.title)} 수정">수정</button></li>`;
+}
+const list=(items,kind,empty)=>items.length?`<ul class="list">${items.map(item=>row(item,kind)).join('')}</ul>`:`<p class="empty">${empty}</p>`;
+const action=(kind,label)=>`<button class="small" data-add="${kind}">＋ ${label}</button>`;
+function taskPanel(items){
+ const done=items.filter(t=>t.done).length;
+ const child=selected==='won'||selected==='jin';
+ const starred=child&&items.length>0&&items.every(t=>t.done);
+ return `<div class="panel"><div class="panel-head"><h2>숙제·할 일</h2>${action('task','할 일 추가')}</div>
+ <div class="progress">${starred?'★ 모두 완료했어요! · ':''}${done}/${items.length} 완료</div>
+ ${list(items,'task','등록된 할 일이 없어요.')}</div>`;
+}
+function render(){
+ $('nav').innerHTML=tabs.map(([id,label])=>`<button data-view="${id}" ${view===id?'aria-current="page"':''}>${label}</button>`).join('');
+ $('filters').innerHTML=[everyone,...people].map(p=>`<button data-filter="${p.id}" aria-pressed="${p.id===selected}">${p.name}</button>`).join('');
+ const tasks=data.tasks.filter(matches).sort((a,b)=>Number(a.done)-Number(b.done)||a.date.localeCompare(b.date));
+ if(view==='home'){
+  const due=tasks.filter(t=>t.date===today||(!t.done&&t.date<today));
+  const cards=people.map(p=>{
+   const next=data.events.filter(e=>e.owner===p.id&&happens(e,today)).sort((a,b)=>a.start.localeCompare(b.start))[0];
+   const count=data.tasks.filter(t=>t.owner===p.id&&!t.done&&t.date<=today).length;
+   return `<button class="person" data-person="${p.id}" style="--tint:${p.color}">
+   <canvas width="16" height="16" data-avatar="${p.id}" aria-hidden="true"></canvas><strong>${p.name}</strong>
+   <span>${next?`${esc(next.start)} ${esc(next.title)}`:'오늘 일정 없음'}</span><span>남은 할 일 ${count}개</span></button>`;
+  }).join('');
+  $('content').innerHTML=`<div class="family">${cards}</div><div class="panels">
+  <div class="panel"><div class="panel-head"><h2>오늘 일정</h2>${action('event','일정 추가')}</div>
+  ${list(eventsAt(today),'event','오늘 예정된 일정이 없어요.')}</div>${taskPanel(due)}</div>`;
+ }else if(view==='tasks'){
+  $('content').innerHTML=taskPanel(tasks);
+ }else{
+  const days=Array.from({length:7},(_,index)=>{
+   const iso=addDays(week,index);
+   const events=eventsAt(iso).map(e=>`<button class="event" data-edit="${esc(e.id)}" data-kind="event" style="--tint:${person(e.owner).color}">${esc(timeText(e))}<strong>${esc(e.title)}</strong>${person(e.owner).name}</button>`).join('');
+   return `<section class="day ${iso===today?'today':''}"><h3>${weekdays[day(iso)]} · ${shortDate(iso)}</h3>${events||'<p class="empty">일정 없음</p>'}</section>`;
+  }).join('');
+  $('content').innerHTML=`<div class="toolbar"><button class="plain" data-week="-7" aria-label="이전 주">‹</button><span class="date-range">${shortDate(week)}–${shortDate(addDays(week,6))}</span><button class="plain" data-week="7" aria-label="다음 주">›</button><button class="plain" data-week="0">이번 주</button>${action('event','일정 추가')}</div><div class="week">${days}</div>`;
+ }
+ paint();
+}
+const editor=$('editor'), form=$('form');
+const field=name=>form.elements.namedItem(name);
+field('owner').innerHTML=[everyone,...people].map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+function openEditor(kind,id){
+ editKind=kind;editId=id;
+ const isEvent=kind==='event';
+ const item=(isEvent?data.events:data.tasks).find(e=>e.id===id);
+ $('editorTitle').textContent=(isEvent?'일정':'할 일')+(item?' 수정':' 추가');
+ $('dateLabel').firstChild.textContent=isEvent?'날짜':'마감일';
+ $('times').hidden=!isEvent;
+ $('repeat').hidden=!isEvent;
+ field('start').required=isEvent;
+ field('title').value=item?.title||'';
+ field('owner').value=item?.owner||selected;
+ field('date').value=item?.date||(view==='week'&&week!==monday(today)?week:today);
+ field('start').value=item?.start||'15:00';
+ field('end').value=item?.end||'';
+ field('repeat').value=item?.repeat||'no';
+ $('remove').hidden=!item;
+ $('error').textContent='';
+ editor.showModal();
+ field('title').focus();
+}
+document.addEventListener('click',event=>{
+ const b=event.target.closest('button');
+ if(!b)return;
+ const d=b.dataset;
+ if(d.view){view=d.view;render();document.querySelector(`[data-view="${view}"]`).focus();}
+ if(d.filter){selected=d.filter;render();document.querySelector(`[data-filter="${selected}"]`).focus();}
+ if(d.person){selected=d.person;view='tasks';render();document.querySelector(`[data-filter="${selected}"]`).focus();}
+ if(d.week){week=d.week==='0'?monday(today):addDays(week,Number(d.week));render();document.querySelector(`[data-week="${d.week}"]`).focus();}
+ if(d.add)openEditor(d.add);
+ if(d.edit)openEditor(d.kind,d.edit);
+});
+$('content').addEventListener('change',event=>{
+ const id=event.target.dataset.check;
+ const task=data.tasks.find(t=>t.id===id);
+ if(!task)return;
+ task.done=event.target.checked;
+ save();
+ document.querySelector(`[data-check="${CSS.escape(id)}"]`)?.focus();
+});
+$('cancel').onclick=()=>editor.close();
+$('remove').onclick=()=>{
+ if(!confirm('이 항목을 삭제할까요? 반복 일정은 전체가 삭제돼요.'))return;
+ const collection=editKind==='event'?'events':'tasks';
+ data[collection]=data[collection].filter(item=>item.id!==editId);
+ editor.close();
+ save();
+};
+form.addEventListener('submit',event=>{
+ event.preventDefault();
+ const values=Object.fromEntries(new FormData(form));
+ values.title=values.title.trim();
+ if(!values.title){$('error').textContent='이름을 입력해 주세요.';return;}
+ if(editKind==='event'&&values.end&&values.end<=values.start){
+  $('error').textContent='종료 시간을 시작 시간보다 늦게 입력해 주세요.';return;
+ }
+ const collection=editKind==='event'?'events':'tasks';
+ const items=data[collection];
+ const index=items.findIndex(item=>item.id===editId);
+ const id=editId||(globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random()}`);
+ const {owner,title,date,start,end,repeat}=values;
+ const entry=editKind==='event'?{id,owner,title,date,start,end,repeat}:{id,owner,title,date,done:items[index]?.done||false};
+ if(index<0)items.push(entry);else items[index]=entry;
+ editor.close();
+ save();
+});
+render();
+</script>
+<style>[hidden]{display:none!important}</style>
+</body>
+</html>
